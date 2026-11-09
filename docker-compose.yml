@@ -1,0 +1,11 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kartabel
+      POSTGRES_USER: kartabel
+      POSTGRES_PASSWORD: kartabel_dev
+    ports: ["5432:5432"]
+    volumes: ["kartabel_pg:/var/lib/postgresql/data"]
+volumes:
+  kartabel_pg:
