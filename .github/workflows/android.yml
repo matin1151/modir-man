@@ -1,0 +1,43 @@
+name: Android preview
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: SQLite test library
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+      - name: Dependencies
+        working-directory: mobile
+        run: flutter pub get
+      - name: Static analysis
+        working-directory: mobile
+        run: flutter analyze
+      - name: Tests
+        working-directory: mobile
+        run: flutter test --reporter expanded
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Dependency scan
+        uses: google/osv-scanner-action@v2.0.2
+        with:
+          scan-args: --lockfile=mobile/pubspec.lock
+      - name: Build debug APK
+        working-directory: mobile
+        run: flutter build apk --debug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: modir-man-android-debug
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
